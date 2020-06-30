@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+	<title>ServiceWorker App</title>
+	
+	<style type="text/css">
+		*{
+			padding: 0px;
+			margin: 0px;
+			font-family: arial;
+		}
+	</style>
+	
+	<!--<script src="exampleCommon.js.php"></script>-->
+	<script src="workerClient.js"></script>
+	<script>
+		function initApp(){
+			
+			//do stuff here...if needed
+			
+		}
+		//don't init the app until the service worker has been registered
+		window.addEventListener(
+			"load",
+			function(){
+				workerClient.init(initApp);
+			},
+			false
+		);
+	</script>
+</head>
+<body>
+	<div>Loading...</div>
+</body>
+</html>
