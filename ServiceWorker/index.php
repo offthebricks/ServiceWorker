@@ -22,8 +22,7 @@ if(isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']){
 }
 $servername .= $_SERVER["REQUEST_URI"];
 $servername = substr($servername,0,strpos($servername,"ServiceWorker"));
-//header("Service-Worker-Allowed: https://$servername");
-header("Service-Worker-Allowed: https://dev.offthebricks.com/Apps/Notes/");
+header("Service-Worker-Allowed: https://$servername");
 header("Content-Type: application/javascript");
 
 echo file_get_contents("ServiceWorker.js");
