@@ -11,7 +11,7 @@ var workerClient = {
 		if(typeof(navigator.serviceWorker) !== 'undefined'){
 			//loads the service worker js file by way of the index.php file in the ServiceWorker folder
 			//best to use the index.php or similar in order to easily set certain http headers
-			navigator.serviceWorker.register('ServiceWorker/')//,{scope:"https://www.example.com/"})
+			navigator.serviceWorker.register('ServiceWorker/',{scope:location.href.substring(0,location.href.lastIndexOf("/")+1)})
 			.then(
 				function(registration){
 					//Registration was successful
