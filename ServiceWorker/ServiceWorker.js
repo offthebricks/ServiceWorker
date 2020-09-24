@@ -15,7 +15,7 @@ limitations under the License.
 
 var config = {
 	appCacheName: "SW_AppFiles",
-	updateCheckPeriod: 10000,
+	updateCheckPeriod: 10000,	//ten seconds
 	lastUpdateCheck: null
 };
 
@@ -41,12 +41,14 @@ var AppFileManager = (function(){
 			}
 		},
 		getResource: function(obj,name){
-			for(var i=0; i<obj.length; i++){
-				if(obj[i].name !== name){
-					continue;
+			if(obj){
+				for(var i=0; i<obj.length; i++){
+					if(obj[i].name !== name){
+						continue;
+					}
+					//match found so return the resource
+					return obj[i];
 				}
-				//match found so return the resource
-				return obj[i];
 			}
 			//no match found
 			return false;
@@ -61,7 +63,14 @@ var AppFileManager = (function(){
 				if(currentObj[i].content === null){
 					//if missing
 					if(!res){
-						afm_self.changeList.push(new afm_self.changeObj(true,url+currentObj[i].name));
+						//if this is an external resource
+						if(currentObj[i].name.indexOf("http") === 0){
+							afm_self.changeList.push(new afm_self.changeObj(true,currentObj[i].name));
+						}
+						//store with local path
+						else{
+							afm_self.changeList.push(new afm_self.changeObj(true,url+currentObj[i].name));
+						}
 					}
 				}
 				//if folder
@@ -83,8 +92,14 @@ var AppFileManager = (function(){
 				//if file
 				if(refObj[i].content === null){
 					//if missing or version is newer
-					if(!res || refObj[i].version > res.version){
-						afm_self.changeList.push(new afm_self.changeObj(false,url+refObj[i].name));
+					if(!res || (res.version > 0 && refObj[i].version > res.version)){
+						//if this is an external resource
+						if(refObj[i].name.indexOf("http") === 0){
+							afm_self.changeList.push(new afm_self.changeObj(false,refObj[i].name));
+						}
+						else{
+							afm_self.changeList.push(new afm_self.changeObj(false,url+refObj[i].name));
+						}
 					}
 				}
 				//if folder
@@ -99,8 +114,7 @@ var AppFileManager = (function(){
 		}
 	};
 	return {
-		checkForUpdate: function(){
-			config.lastUpdateCheck = Date.now();
+		checkForUpdate: function(client){
 			var openedCache, versionData;
 			return caches.open(config.appCacheName).then(
 				function(cache){
@@ -180,8 +194,13 @@ var AppFileManager = (function(){
 					}
 					else{
 						console.log("app update applied");
-						//tell client to refresh files
-						//postMessage("sw-msg: app files updated");
+						if(client){
+							//tell client to refresh files
+							client.postMessage("app files updated 1");
+						}
+						else{
+							self.clients.matchAll().then(all => all.map(client => client.postMessage("app files updated 2")));
+						}
 					}
 					console.log("done app update check");
 				}
@@ -201,7 +220,7 @@ self.addEventListener(
 		console.log("service worker install");
 		//Perform install steps
 		event.waitUntil(
-			AppFileManager.checkForUpdate();
+			AppFileManager.checkForUpdate()
 		);
 	}
 );
@@ -218,9 +237,17 @@ self.addEventListener(
 self.addEventListener(
 	'fetch',
 	function(event){
-		if(config.lastUpdateCheck + config.updateCheckPeriod < Date.now() || event.request.url.indexOf("index.htm") >= 0){
+		let updateTime = config.lastUpdateCheck + config.updateCheckPeriod, nowTime = Date.now();
+		
+		//if(updateTime < nowTime || event.request.url.indexOf("index.htm") >= 0){
+		if(event.request.url.indexOf("index.htm") >= 0){
+			config.lastUpdateCheck = Date.now();
 			console.log("sw: fetch triggering sw update check");
-			AppFileManager.checkForUpdate();
+			var client = null;
+			if(event.clientId){		//not yet well supported in browsers - https://ponyfoo.com/articles/serviceworker-messagechannel-postmessage
+				client = self.clients.get(event.clientId).then(client => AppFileManager.checkForUpdate(client));
+			}
+			AppFileManager.checkForUpdate(client);
 		}
 		event.respondWith(
 			caches.match(event.request).then(
@@ -244,9 +271,7 @@ self.addEventListener(
 self.addEventListener(
 	"message",
 	function(e){
-		//console.log(JSON.stringify(e.data));
-		
-		
+		console.log(JSON.stringify(e.data));
 	},
 	false
 );
