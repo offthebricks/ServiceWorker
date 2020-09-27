@@ -14,9 +14,7 @@ limitations under the License.
 */
 
 var config = {
-	appCacheName: "SW_AppFiles",
-	updateCheckPeriod: 10000,	//ten seconds
-	lastUpdateCheck: null
+	appCacheName: "SW_AppFiles"
 };
 
 var AppFileManager = (function(){
@@ -237,11 +235,8 @@ self.addEventListener(
 self.addEventListener(
 	'fetch',
 	function(event){
-		let updateTime = config.lastUpdateCheck + config.updateCheckPeriod, nowTime = Date.now();
-		
-		//if(updateTime < nowTime || event.request.url.indexOf("index.htm") >= 0){
+		//check for an update only if reloading the app
 		if(event.request.url.indexOf("index.htm") >= 0){
-			config.lastUpdateCheck = Date.now();
 			console.log("sw: fetch triggering sw update check");
 			var client = null;
 			if(event.clientId){		//not yet well supported in browsers - https://ponyfoo.com/articles/serviceworker-messagechannel-postmessage
@@ -261,7 +256,10 @@ self.addEventListener(
 				}
 			).catch(
 				function() {
-					return new Response("sw: requested resource not cached, and network error, unavailable, or file not found");
+					return new Response(
+						"sw: requested resource not cached, and network error, unavailable, or file not found",
+						{"status": 503, statusText: "offline"}
+					);
 				}
 			)
 		);
