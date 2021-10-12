@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright 2020 OffTheBricks - https://github.com/offthebricks/ServiceWorker
+Copyright 2021 OffTheBricks - https://github.com/offthebricks/ServiceWorker
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -23,7 +23,7 @@ if(isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST']){
 $servername .= $_SERVER["REQUEST_URI"];
 $servername = substr($servername,0,strpos($servername,"ServiceWorker"));
 header("Service-Worker-Allowed: https://$servername");
-header("Content-Type: application/javascript");
+header("Content-Type: application/javascript; charset=UTF-8");
 
 echo file_get_contents("ServiceWorker.js");
 ?>
