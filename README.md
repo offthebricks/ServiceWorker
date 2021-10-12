@@ -12,4 +12,4 @@ A Javascript PHP file(`exampleCommon.js.php`) is included as an example for how 
 
 You should not have to but if you wish to set the scope for the Service Worker, it can be set in `workerClient.js` in the root of the repo.
 
-The functionality of the Service Worker can be extended to handle POST requests, and to also serve as an API for your app. The API functionality is useful as it allows the storage of large files, of diverse variety. Check out `ServiceWorker/ServiceAPI.js` and `exampleindex.htm` for more details.
+The functionality of the Service Worker can be extended to handle POST requests, and to also serve as an API for your app. The API functionality is useful as it allows the storage of large files, of diverse variety. Check out `ServiceWorker/ServiceAPI.js` and `exampleindex.htm` for more details. To see the code in action, just put all the files as-is on your PHP-enabled server, and visit `exampleindex.htm`.
