@@ -1,25 +1,160 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<title>Progressive Web App</title>
 	<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="default-src * data:; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
-	<title>ServiceWorker App</title>
+	
+	<link rel="manifest" href="Manifest/">
 	
 	<style type="text/css">
 		*{
 			padding: 0px;
 			margin: 0px;
+		}
+		body{
 			font-family: arial;
+		}
+		#splashview{
+			text-align: center;
+			margin-top: 100px;
+		}
+		#splashview img{
+			margin: 50px;
+		}
+		#splashview .status{
+			margin-top: 50px;
+			font-size: 12px;
+			font-style: italic;
+		}
+		
+		.hidden{
+			display: none;
+		}
+		#startview{
+			text-align: center;
+			margin-top: 100px;
+			line-height: 45px;
+		}
+		#startview .holder{
+			padding: 15px;
+			border: 1px solid blue;
+			display: inline-block;
+		}
+		#startview textarea{
+			width: 300px;
+			height: 250px;
 		}
 	</style>
 	
-	<!--<script src="exampleCommon.js.php"></script>-->
 	<script src="workerClient.js"></script>
 	<script>
-		function initApp(){
+		//******************************************************
+		//Only provided to make the example functional, not needed for your app
+		var Ctrl = {
+			cachedText: "",
+			cachedTextFilename: "cachedtext.txt",
+			changeTimer: null,
+			init: function(){
+				let elm = document.getElementById("cachedtextlink");
+				elm.href = "ServiceAPI/" + Ctrl.cachedTextFilename;
+				//set textarea change listener
+				elm = document.getElementById("cachedtext");
+				elm.addEventListener("keydown",Ctrl.textChanged,false);
+				//fetch cached text
+				Ctrl.fetchCachedText().then(Ctrl.gotCache);
+			},
+			fetchCachedText: function(){
+				/************************
+				//You can use a fetch approach to get cached data, or the below API method
+				return fetch("ServiceAPI/" + Ctrl.cachedTextFilename)
+				.then(function(response){
+					if(!response.ok){
+						return new Promise(function(resolve,reject){resolve("");});
+					}
+					return response.text();
+				});
+				/************************/
+				return new Promise(function(resolve,reject){
+					workerClient.API.sendRequest(
+						{
+							action: "gettext",
+							name: Ctrl.cachedTextFilename
+						},
+						function(result){
+							if(!result){
+								result = "";
+							}
+							resolve(result);
+						}
+					);
+				});
+				/************************/
+			},
+			//only loaded on init
+			gotCache: function(text){
+				//if text is empty, cache what's in the textarea by default
+				let elm = document.getElementById("cachedtext");
+				if(text.length == 0 && elm.value.length > 0){
+					text = elm.value;
+					Ctrl.updateCache(text);
+				}
+				//if text is not empty, set it to the textarea
+				else{
+					elm.value = text;
+				}
+				Ctrl.cachedText = text;
+			},
+			textChanged: function(){
+				let text = this.value;
+				if(Ctrl.changeTimer){
+					clearTimeout(Ctrl.changeTimer);
+				}
+				Ctrl.changeTimer = setTimeout(function(){Ctrl.updateCache(text);}, 3000);
+			},
+			updateCache: function(text){
+				workerClient.API.sendRequest(
+					{
+						action: "addtext",
+						name: Ctrl.cachedTextFilename,
+						type: "text/plain",
+						data: text
+					},
+					function(result){
+						let elm = document.getElementById("savemsg");
+						if(result == "OK"){
+							elm.innerText = "text saved to cache";
+						}
+						else{
+							elm.innerText = "error saving to cache";
+						}
+						setTimeout(function(){elm.innerText = "";},2000);
+					}
+				);
+			}
+		};
+		//******************************************************
+		
+		function doneAppInit(){
 			
-			//do stuff here...if needed
+			//init done; disable loading screen and start your app here
+			
+			let elm = document.getElementById("splashview");
+			elm.classList.add("hidden");
+			elm = document.getElementById("startview");
+			elm.classList.remove("hidden");
+			
+		}
+		function initApp(){
+			//update status
+			document.body.getElementsByClassName("status")[0].innerText = "Loading App";
+			//set a time limit on the loading screen
+			setTimeout(doneAppInit,2000);
+			
+			//initialize your app here
+			
+			Ctrl.init();
 			
 		}
 		//don't init the app until the service worker has been registered
@@ -33,6 +168,26 @@
 	</script>
 </head>
 <body>
-	<div>Loading...</div>
+	<div id="splashview">
+		<h2>Progressive Web App</h2>
+		<img src="assets/appicon192.png" alt="your app icon here"/>
+		<div>by --Your Name Here--</div>
+		<div class="status">Initializing</div>
+	</div>
+	<div id="startview" class="hidden">
+		<h2>App Loaded</h2>
+		<div class="holder">
+			<h3>Cached Text</h3>
+			<p>
+				This text is cached like it's a server asset.
+				You can view it like any asset at its URL, but only in this browser.
+			</p>
+			<a id="cachedtextlink" href="" target="_blank">Cached Text URL</a>
+			<br/>
+			<i id="savemsg"></i>
+			<br/>
+			<textarea id="cachedtext">Text is autosaved every few seconds after a change was made</textarea>
+		</div>
+	</div>
 </body>
 </html>
