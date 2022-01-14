@@ -207,7 +207,7 @@ var CacheManager = (function(){
 		},
 		
 		getCachedResponse: function(request){
-			return caches.match(request).then(
+			return caches.match(request, {ignoreVary: true, ignoreSearch: true}).then(
 				function(response){
 					if(response){
 						Logger.log("sw: cached response to: " + request.url);
