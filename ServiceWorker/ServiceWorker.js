@@ -41,7 +41,7 @@ var Logger = {
 			console.log(str);
 		}
 	},
-	error: function(str){
+	error: function(str, ex){
 		if(config.logging.error){
 			console.error(str);
 		}
@@ -74,8 +74,14 @@ self.addEventListener(
 self.addEventListener(
 	'fetch',
 	function(event){
-		//if loading the root of the app - update if your app main page is not 'index.htm'
 		let url = event.request.url, pos = url.indexOf("index.htm"), pos2 = url.indexOf("?");
+		//double check that the 'scope' did fail, because it does sometimes
+		if(url.indexOf(self.origin) !== 0){
+			//not the correct domain, so just fetch
+			event.respondWith(fetch(event.request));
+			return;
+		}
+		//if loading the root of the app - update if your app main page is not 'index.htm'
 		if(pos >= 0 && (pos2 < 0 || pos2 > pos)){
 			//check if this is an API request
 			if(event.request.method != "GET"){
@@ -104,15 +110,17 @@ self.addEventListener(
 				}
 			}
 		}
-		if(API.isCachedAsset(event.request.url)){
-			event.respondWith(
-				API.getCachedAsset(event.request)
-			);
-		}
-		else if(config.app.CacheEnabled){
-			event.respondWith(
-				CacheManager.getCachedResponse(event.request)
-			);
+		if(config.app.CacheEnabled){
+			if(API.isCachedAsset(event.request.url)){
+				event.respondWith(
+					API.getCachedAsset(event.request)
+				);
+			}
+			else{
+				event.respondWith(
+					CacheManager.getCachedResponse(event.request)
+				);
+			}
 		}
 		else{
 			event.respondWith(fetch(event.request));
