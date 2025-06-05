@@ -1,5 +1,5 @@
 /*
-Copyright 2021 OffTheBricks - https://github.com/offthebricks/ServiceWorker
+Copyright 2025 OffTheBricks - https://github.com/offthebricks/ServiceWorker
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -28,11 +28,14 @@ var workerClient = {
 		requests: [],
 		
 		onServiceWorkerMessage: function(data){
+			if(!data){
+				return;
+			}
 			let i, req, requests = workerClient.API.requests;
 			for(i=0; i<requests.length; i++){
 				if(requests[i].id == data.id){
 					req = requests[i];
-					requests.slice(i,1);
+					requests.splice(i,1);
 					break;
 				}
 			}
@@ -58,7 +61,7 @@ var workerClient = {
 			apiData.id = req.id;
 			workerClient.API.requests.push(req);
 			navigator.serviceWorker.controller.postMessage(JSON.stringify(apiData));
-			console.log("wc api req: "+JSON.stringify(apiData));
+			//console.log("wc api req: "+JSON.stringify(apiData));		//for debugging
 			return true;
 		}
 	},
@@ -72,7 +75,8 @@ var workerClient = {
 		}
 		
 		//register the service worker
-		navigator.serviceWorker.register('ServiceWorker/',{scope:location.href.substring(0,location.href.lastIndexOf("/")+1)})
+		console.log("attempting service worker registration on: ./");
+		navigator.serviceWorker.register('ServiceWorker/',{scope:"./"})
 		.then(
 			function(registration){
 				//Registration was successful
@@ -105,7 +109,7 @@ var workerClient = {
 			"message",
 			function(e){
 				let obj;
-				console.log("sw-message: "+e.data);
+				//console.log("sw-message: "+e.data);
 				try{
 					obj = JSON.parse(e.data);
 				}
