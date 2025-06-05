@@ -1,5 +1,5 @@
 /*
-Copyright 2021 OffTheBricks - https://github.com/offthebricks/ServiceWorker
+Copyright 2025 OffTheBricks - https://github.com/offthebricks/ServiceWorker
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -200,8 +200,7 @@ var CacheManager = (function(){
 				}
 			).catch(
 				function(e){
-					Logger.error("error updating app files - offline?");
-					Logger.log(JSON.stringify(e));
+					Logger.error("error updating app files - offline?", e);
 				}
 			);
 		},
